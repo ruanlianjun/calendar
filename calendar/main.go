@@ -1,4 +1,4 @@
-package pkg
+package calendar
 
 import (
 	"fmt"
