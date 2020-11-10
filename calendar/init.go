@@ -749,9 +749,9 @@ func (b *BaZhi) DintDec(jd, shiqu float64, dec bool) float64 {
 
 func (b *BaZhi) PaiYue(y float64) ([]map[string]int, []map[string]string) {
 	num := 15
-	zq := make([]float64, 24)
-	jq := make([]float64, 24)
-	hs := make([]float64, 24)
+	zq := make([]float64, num)
+	jq := make([]float64, num)
+	hs := make([]float64, num)
 	i := 0
 	var t1 = 365.2422*(y-2000.0) - 50.0 // 农历年首始于前一年的冬至,为了节气中气一起算,取前年大雪之前
 
@@ -759,6 +759,7 @@ func (b *BaZhi) PaiYue(y float64) ([]map[string]int, []map[string]string) {
 		zq[i] = b.jiaoCal(t1+(float64(i)*30.43685), (float64(i)*30)-90.0, 0)  // 中气计算,冬至的太阳黄经是270度(或-90度)
 		jq[i] = b.jiaoCal(t1+(float64(i)*30.43685), (float64(i)*30)-105.0, 0) // 顺便计算节气,它不是农历定朔计算所必需的
 	}
+
 	//spew.Dump(zq)
 	//spew.Dump(jq)
 	// 在冬至过后,连续计算num个日月合朔时刻
@@ -856,6 +857,8 @@ func (b *BaZhi) PaiYue(y float64) ([]map[string]int, []map[string]string) {
 		out[i] = tmp
 		outInfo[i] = syn[i]
 	}
+
+	//fmt.Println(out,outInfo)
 	return out, outInfo
 }
 
@@ -864,25 +867,11 @@ func (b *BaZhi) Solar2Lunar(yy, mm, dd, hh, ii, ss float64) map[string]string {
 	n1, n1f := b.PaiYue(yy - 1)
 	n2, n2f := b.PaiYue(yy)
 	n4, n4f := b.PaiYue(yy + 1)
-	//cstSh, _ := time.LoadLocation("Asia/Shanghai")
-	//
-	//os.Exit(1)
+
 	timeLocation, _ := time.LoadLocation("Asia/Shanghai")
 	dateU := time.Date(int(yy), time.Month(int(mm)), int(dd), int(hh), int(ii), int(ss), 0, timeLocation)
 
 	utime := int(dateU.Unix() * 1000)
-
-	//tmp2, err := time.Parse("2006-1-2 15:04:05", fmt.Sprintf("%d-%d-%d 00:00:00", int(yy), int(mm), int(dd)))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//utime := int(tmp2.In(cstSh).Unix() * 1000)
-
-	//utime := 1606752000000.0
-	//fmt.Println(utime)
-	//fmt.Println(tmp2, yy, mm, dd)
-	//os.Exit(1)
-	//fmt.Println(">>>>>", n1, n1f, n2, n2f, n4, n4f)
 
 	n3 := n1[:]
 	n3f := n1f[:]
@@ -929,27 +918,27 @@ func (b *BaZhi) Solar2Lunar(yy, mm, dd, hh, ii, ss float64) map[string]string {
 	return newday
 }
 
-//export Lunar2Solar
 //将农历时间转换成公历时间 // r 0男，1女
-func (b *BaZhi) Lunar2Solar(yy, mm, dd, r int) map[string]int {
+func (b *BaZhi) Lunar2Solar(yy, mm, dd, r int, isLeap ...bool) (map[string]int, error) {
 
 	n2, n2f := b.PaiYue(float64(yy) - 1)
 	n4, n4f := b.PaiYue(float64(yy))
 	n5, n5f := b.PaiYue(float64(yy) + 1)
 
-	//tmpDate, _ := time.Parse("2006/01/02 15:04:05", fmt.Sprintf("%f/%f/%f 00:00:00", yy, mm, dd))
-	//utime := float64(tmpDate.Unix())
-
 	n3 := n2
 	n3f := n2f
 	for i := 0; i < 12; i++ {
-		n3[len(n3)] = n4[i]
-		n3f[len(n3)] = n4f[i]
+		n3 = append(n3, n4[i])
+		n3f = append(n3f, n4f[i])
+		//n3[i] = n4[i]
+		//n3f[i] = n4f[i]
 	}
 
 	for i := 0; i < 12; i++ {
-		n3[len(n3)] = n5[i]
-		n3f[len(n3)] = n5f[i]
+		n3 = append(n3, n5[i])
+		n3f = append(n3f, n5f[i])
+		//n3[i] = n5[i]
+		//n3f[i] = n5f[i]
 	}
 	num := len(n3)
 
@@ -958,13 +947,14 @@ func (b *BaZhi) Lunar2Solar(yy, mm, dd, r int) map[string]int {
 		var mi, yi, ri int
 		var err error
 		if mi, err = strconv.Atoi(n3f[i]["m"]); err != nil {
-			continue
+			return nil, err
+
 		}
 		if yi, err = strconv.Atoi(n3f[i]["y"]); err != nil {
-			continue
+			return nil, err
 		}
 		if ri, err = strconv.Atoi(n3f[i]["r"]); err != nil {
-			continue
+			return nil, err
 		}
 
 		if mi == mm && yi == yy && ri == r {
@@ -975,10 +965,15 @@ func (b *BaZhi) Lunar2Solar(yy, mm, dd, r int) map[string]int {
 	//定位到了正确的时间点了 那么开始加了
 	var chaday = dd
 	chaday-- //每个月是1开始的 不是0
-	now := n3[wei]["utime"] + chaday*86400000
-	_, newday := b.formatDate("ymd", int(now), false)
+	if len(isLeap) > 0 && isLeap[0] {
+		wei = wei + 1
+	}
 
-	return newday
+	now := n3[wei]["utime"] + chaday*86400000
+	_, newday := b.formatDate("ymd", now, false)
+
+	//fmt.Println(n3[wei])
+	return newday, nil
 }
 
 //四柱計算,分早子时晚子时,传公历
@@ -1510,6 +1505,12 @@ func (b *BaZhi) formatDate(t string, tm int, untime bool) (int, map[string]int) 
 		utime = tm * 1
 	}
 
+	if len(strconv.Itoa(utime)) > 10 {
+		utime = utime / 1000
+	}
+	//fmt.Println(utime)
+
+	//1077292800000
 	now := time.Unix(int64(utime), 0)
 
 	switch t {

@@ -24,8 +24,8 @@ func SoloarToLunar(yy, mm, dd, hh, ii, ss float64, zwz bool) (string, string) {
 	return fmt.Sprintf("%s-%s-%s", f["y"], f["m"], f["d"]), f["msg"]
 }
 
-func LunarToSolar(yy, mm, dd, r int, zwz bool) map[string]int {
+func LunarToSolar(yy, mm, dd, r int, zwz bool, isLeap bool) (map[string]int, error) {
 	b := NewBaZhi(zwz)
-	f := b.Lunar2Solar(yy, mm, dd, r)
-	return f
+	f, err := b.Lunar2Solar(yy, mm, dd, r, isLeap)
+	return f, err
 }
