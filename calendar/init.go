@@ -1375,9 +1375,9 @@ func (b *BaZhi) GetYun(gd int, dtime int) (map[string]int, string, []string, []s
 	return begtime, bazi, tg, dz, bigInfo, startDesc, ret
 }
 
-func (b *BaZhi) GetLiuNian(yy float64) map[int]map[string]string {
+func (b *BaZhi) GetLiuNian(yy float64) []map[string]string {
 	yy = math.Floor(yy)
-	tmp := make(map[int]map[string]string)
+	tmp := make([]map[string]string,0)
 	ygz := ((int(yy)+4712+24)%60 + 60) % 60
 	g := ygz % 10
 	z := ygz % 12
@@ -1392,18 +1392,17 @@ func (b *BaZhi) GetLiuNian(yy float64) map[int]map[string]string {
 		tmp2["y"] = fmt.Sprintf("%d", int(yy)+i)
 		tmp2["g_str"] = b.Ctg[gm]
 		tmp2["z_str"] = b.Cdz[zm]
-		if tmp[len(tmp)] == nil {
-			tmp[len(tmp)] = make(map[string]string)
-		}
-		tmp[len(tmp)] = tmp2
+
+		tmp = append(tmp, tmp2)
+		//tmp[len(tmp)] = tmp2
 	}
 	return tmp
 }
 
-func (b *BaZhi) GetLiuYue(yy float64) map[int]map[string]string {
+func (b *BaZhi) GetLiuYue(yy float64) []map[string]string {
 	yy = math.Floor(yy)
 	y := b.GetPureJQsinceSpring(yy)
-	all := make(map[int]map[string]string)
+	all := make([]map[string]string,0)
 
 	ygz := math.Mod(math.Mod(yy+4712+24, 60)+60, 60)
 	yg := math.Mod(ygz, 10)
@@ -1423,7 +1422,8 @@ func (b *BaZhi) GetLiuYue(yy float64) map[int]map[string]string {
 		tmp3 := b.setFromJD(y[i+1], true)
 		date2, _ := time.Parse("2006/01/02", fmt.Sprintf("%f/%f/%f", tmp3[0], tmp3[1], tmp3[2]))
 		tmp["endtime"] = fmt.Sprintf("%d", date2.Unix())
-		all[len(all)] = tmp
+		all = append(all, tmp)
+		//all[len(all)] = tmp
 	}
 	return all
 }
@@ -1457,7 +1457,7 @@ func (b *BaZhi) GetLiuRi(beg, end float64) (map[int]map[string]int, map[int]stri
 	return day, daymsg
 }
 
-func (b *BaZhi) GetLiuRISLiuShi(Gan float64) (map[int]map[string]float64, map[int]string) {
+func (b *BaZhi) GetLiuRISLiuShi(Gan float64) ([]map[string]float64, []string) {
 	var zhi, i, tg, dz, BeginGan, start, end float64
 
 	GanArr := []int{0, 2, 4, 6, 8}
@@ -1467,8 +1467,8 @@ func (b *BaZhi) GetLiuRISLiuShi(Gan float64) (map[int]map[string]float64, map[in
 	gan := GanArr[int(BeginGan)]
 	zhi = 0
 
-	tmp := make(map[int]map[string]float64)
-	tmpMsg := make(map[int]string)
+	tmp := make([]map[string]float64, 0)
+	tmpMsg := make([]string, 0)
 
 	for i = 0; i < 13; i++ {
 		gan++
@@ -1489,8 +1489,10 @@ func (b *BaZhi) GetLiuRISLiuShi(Gan float64) (map[int]map[string]float64, map[in
 		tmp2["beg"] = start
 		tmp2["end"] = end
 
-		tmpMsg[len(tmp)] = b.Ctg[int(tg)] + b.Cdz[int(dz)]
-		tmp[len(tmp)] = tmp2
+		tmpMsg = append(tmpMsg, b.Ctg[int(tg)]+b.Cdz[int(dz)])
+		tmp = append(tmp, tmp2)
+		//tmpMsg[len(tmp)] =
+		//tmp[len(tmp)] = tmp2
 	}
 
 	return tmp, tmpMsg
