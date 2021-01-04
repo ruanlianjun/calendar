@@ -1428,12 +1428,12 @@ func (b *BaZhi) GetLiuYue(yy float64) []map[string]string {
 	return all
 }
 
-func (b *BaZhi) GetLiuRi(beg, end float64) (map[int]map[string]int, map[int]string) {
+func (b *BaZhi) GetLiuRi(beg, end float64) ([]map[string]int, []string) {
 	beg = math.Floor(beg)
 	end = math.Floor(end)
 
-	day := make(map[int]map[string]int)
-	daymsg := make(map[int]string)
+	day := make([]map[string]int,0)
+	daymsg := make([]string,0)
 	var z = 0
 
 	dtime := beg / 1000
@@ -1450,8 +1450,10 @@ func (b *BaZhi) GetLiuRi(beg, end float64) (map[int]map[string]int, map[int]stri
 		tmp["g"] = (gii + z) % 10
 		tmp["z"] = (zii + z) % 12
 
-		day[len(day)] = tmp
-		daymsg[len(daymsg)] = b.Ctg[tmp["g"]] + b.Cdz[tmp["z"]]
+		day = append(day, tmp)
+		daymsg = append(daymsg, b.Ctg[tmp["g"]] + b.Cdz[tmp["z"]])
+		//day[len(day)] = tmp
+		//daymsg[len(daymsg)] = b.Ctg[tmp["g"]] + b.Cdz[tmp["z"]]
 		z++
 	}
 	return day, daymsg
