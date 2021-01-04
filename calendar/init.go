@@ -1473,10 +1473,12 @@ func (b *BaZhi) GetLiuRISLiuShi(Gan float64) ([]map[string]float64, []string) {
 	tmpMsg := make([]string, 0)
 
 	for i = 0; i < 13; i++ {
-		gan++
+
 		tg = math.Mod(float64(gan), 10)
-		zhi++
+		gan++
+
 		dz = math.Mod(zhi, 12)
+		zhi++
 		start = 2*i - 1
 		end = 2*i + 1
 		if start == -1 {
@@ -1493,8 +1495,6 @@ func (b *BaZhi) GetLiuRISLiuShi(Gan float64) ([]map[string]float64, []string) {
 
 		tmpMsg = append(tmpMsg, b.Ctg[int(tg)]+b.Cdz[int(dz)])
 		tmp = append(tmp, tmp2)
-		//tmpMsg[len(tmp)] =
-		//tmp[len(tmp)] = tmp2
 	}
 
 	return tmp, tmpMsg

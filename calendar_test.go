@@ -7,7 +7,7 @@ import (
 )
 
 func TestCalendar(t *testing.T) {
-	baZhi := calendar.NewBaZhi(true)
+	baZhi := calendar.NewBaZhi(false)
 	_, _, _, _, i2, _, _ := baZhi.GetYun(0, 318416400000)
 	fmt.Println("yun", i2)
 	getLiuNian := baZhi.GetLiuNian(2019)
